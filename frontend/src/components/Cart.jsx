@@ -4,48 +4,45 @@ import styled from 'styled-components';
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
-  const [loading, setLoading] = useState(true); 
-  const [error, setError] = useState(''); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        
         const token = localStorage.getItem('token');
+        console.log("Token found:", token); 
         if (!token) {
           setError('User not authenticated');
           setLoading(false);
           return;
         }
-        console.log(token)
 
-        
         const res = await axios.get('http://localhost:8000/cart', {
           headers: { Authorization: `Bearer ${token}` },
-          
         });
-       console.log(res)
+
         if (res.status === 200) {
-          setCartItems(res.data);  
+          
+          setCartItems(res.data);
         } else {
           setError('No cart data available');
         }
-
         setLoading(false);
       } catch (err) {
-        console.log(err)
-        if (err.response?.status === 401) {
+        console.log("Error fetching cart items:", err); 
+        if (err.response?.status === 400) {
           setError('Authentication failed: Invalid or expired token');
         } else {
           setError('Error fetching cart items');
         }
         setLoading(false);
-        console.error(err);
       }
     };
 
     fetchCartItems();
   }, []);
+
 
   if (loading) {
     return <LoadingText>Loading...</LoadingText>;

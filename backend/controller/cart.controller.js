@@ -73,12 +73,12 @@ const addToCart = async (req, res) => {
 // Get cart items
 
 const getCartItems = async (req, res) => {
-  const userId = req.user.userId;
-  // console.log("userID:-",userId)
+  const userId = req.user?.userId;
+  console.log("userID:-",userId)
   try {
-    const cartItems = await Cart.find({ userId });  // Assuming you have a userId in the JWT token
-    // console.log(`cartItems:-`,cartItems)
-    // console.log(userId)
+    const cartItems = await Cart.find({ userId });  
+    console.log(`cartItems:-`,cartItems)
+    
     res.status(200).json(cartItems);
   } catch (err) {
     console.log(err);
