@@ -17,12 +17,14 @@ const Cart = () => {
           setLoading(false);
           return;
         }
+        console.log(token)
 
         
         const res = await axios.get('http://localhost:8000/cart', {
           headers: { Authorization: `Bearer ${token}` },
+          
         });
-
+       console.log(res)
         if (res.status === 200) {
           setCartItems(res.data);  
         } else {
@@ -31,6 +33,7 @@ const Cart = () => {
 
         setLoading(false);
       } catch (err) {
+        console.log(err)
         if (err.response?.status === 401) {
           setError('Authentication failed: Invalid or expired token');
         } else {

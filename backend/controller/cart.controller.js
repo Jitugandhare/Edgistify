@@ -5,7 +5,7 @@ const Product = require("../models/product.model.js");
 
 
 const getCartItems = async (req, res) => {
-  const userId = req.user.id;
+  const userId = req.user._id;
 
   try {
     const cart = await Cart.findOne({ userId }).populate("products.productId");
@@ -21,7 +21,7 @@ const getCartItems = async (req, res) => {
       _id: item.productId._id,
     }));
 
-    res.json(cartData);
+    res.status(200).json(cartData);
   } catch (error) {
     res.status(500).json({ msg: "Server error", error: error.message });
   }

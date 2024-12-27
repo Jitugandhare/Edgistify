@@ -3,21 +3,35 @@ const dotenv = require("dotenv");
 dotenv.config();
 
 const authMiddleware = (req, res, next) => {
-  const token = req.header("Authorization")?.split(" ")[1];
+  // Extract the token from the Authorization header
+  const token = req.headers["authorization"]?.split(" ")[1];
 
   if (!token) {
     return res.status(401).json({ msg: "Authorization denied. No token provided." });
   }
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    req.user = decoded.user;
-    next();
+    // Verify the token
+    jwt.verify(token, process.env.JWT_SECRET_KEY, (err, decoded) => {
+      console.log(`decoded`,decoded)
+      if (err) {
+        if (err.name === "TokenExpiredError") {
+          return res.status(401).json({ msg: "Token has expired." });
+        }
+        return res.status(401).json({ msg: "Token is not valid." });
+      }
+      if (decoded) {
+        req.user = decoded;  
+        next();
+
+      }
+
+      // Proceed to the next middleware or route handler
+      next();
+    });
   } catch (error) {
-    if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ msg: "Token has expired." });
-    }
-    return res.status(401).json({ msg: "Token is not valid." });
+    console.error(error);
+    return res.status(500).json({ msg: "Server error." });
   }
 };
 

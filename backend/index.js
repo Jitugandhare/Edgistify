@@ -9,6 +9,7 @@ const orderRoutes = require("./routes/order.js");
 const productRoutes=require("./routes/product.route.js")
 dotenv.config();
 const app = express();
+app.use(express.urlencoded({extended:true}))
 
 // Middlewares
 app.use(cors());
