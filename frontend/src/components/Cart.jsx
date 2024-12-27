@@ -13,7 +13,7 @@ const Cart = () => {
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        console.log('Token found:', token);
+        // console.log('Token found:', token);
         if (!token) {
           setError('User not authenticated');
           setLoading(false);
@@ -23,7 +23,7 @@ const Cart = () => {
         const res = await axios.get('http://localhost:8000/cart', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(res.data[0].products, 'getCart');
+        // console.log(res.data[0].products, 'getCart');
         if (res.status === 200) {
           setCartItems(res.data[0].products);
         } else {
@@ -45,7 +45,7 @@ const Cart = () => {
   }, []);
 
   const handleRemoveItem = (id) => {
-    console.log('Remove item with id:', id);
+    // console.log('Remove item with id:', id);
     setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
   };
 
@@ -58,7 +58,7 @@ const Cart = () => {
   };
 
   const handleOrderNow = () => {
-    navigate('/order');
+    navigate('/orders');
   };
 
   if (loading) {
