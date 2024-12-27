@@ -1,67 +1,110 @@
-const express = require("express");
 const Cart = require("../models/cart.model.js");
 const Product = require("../models/product.model.js");
+const authMiddleware = require("../middleware/auth.middleware.js");
 
 
+// Add product to cart
+const addToCart = async (req, res) => {
+  // console.log("Request Body:", req.body);
 
-const getCartItems = async (req, res) => {
-  const userId = req.user._id;
+  const { productId, quantity } = req.body.products[0];
+
+
+  // console.log("productId:", productId);
+  // console.log("quantity:", quantity);
 
   try {
-    const cart = await Cart.findOne({ userId }).populate("products.productId");
+
+    if (quantity <= 0 || isNaN(quantity)) {
+      return res.status(400).json({ message: 'Invalid quantity' });
+    }
+
+    const product = await Product.findById(productId);
+
+
+    // console.log('Found product:', product);
+
+
+    if (!product) {
+      return res.status(400).json({ message: 'Product not available' });
+    }
+
+
+    // console.log('Product stock:', product.stock);
+
+
+    if (product.stock < quantity) {
+      return res.status(400).json({ message: 'Insufficient stock' });
+    }
+
+
+    let cart = await Cart.findOne({ userId: req.user.userId });
+
 
     if (!cart) {
-      return res.status(404).json({ msg: "Cart not found" });
+      cart = new Cart({ userId: req.user.userId, products: [] });
     }
 
-    const cartData = cart.products.map(item => ({
-      productName: item.productId.name,
-      price: item.productId.price,
-      quantity: item.quantity,
-      _id: item.productId._id,
-    }));
 
-    res.status(200).json(cartData);
-  } catch (error) {
-    res.status(500).json({ msg: "Server error", error: error.message });
-  }
-};
+    const existingProductIndex = cart.products.findIndex(
+      (item) => item.productId.toString() === productId
+    );
 
 
-
-const addToCart = async (req, res) => {
-  const { productId, quantity } = req.body;
-  const userId = req.user.id;
-
-  if (!productId || !quantity) {
-    return res.status(400).json({ msg: "Product ID and quantity are required" });
-  }
-
-  const product = await Product.findById(productId);
-  if (!product) {
-    return res.status(404).json({ msg: "Product not found" });
-  }
-
-  if (product.stock < quantity) {
-    return res.status(400).json({ msg: "Not enough stock" });
-  }
-
-  let cart = await Cart.findOne({ userId });
-
-  if (!cart) {
-    cart = new Cart({ userId, products: [{ productId, quantity }] });
-    await cart.save();
-  } else {
-    const existingProduct = cart.products.find(p => p.productId.toString() === productId);
-    if (existingProduct) {
-      existingProduct.quantity += quantity;
+    if (existingProductIndex > -1) {
+      cart.products[existingProductIndex].quantity += quantity;
     } else {
+
       cart.products.push({ productId, quantity });
     }
-    await cart.save();
-  }
 
-  res.json({ msg: "Product added to cart", cart });
+
+    await cart.save();
+
+
+    res.status(200).json({ message: 'Product added to cart', cart });
+  } catch (err) {
+
+    console.error('Error adding to cart:', err);
+    res.status(500).json({ error: err.message });
+  }
 };
 
-module.exports = { getCartItems, addToCart };
+// Get cart items
+
+const getCartItems = async (req, res) => {
+  const userId = req.user.userId;
+  // console.log("userID:-",userId)
+  try {
+    const cartItems = await Cart.find({ userId });  // Assuming you have a userId in the JWT token
+    // console.log(`cartItems:-`,cartItems)
+    // console.log(userId)
+    res.status(200).json(cartItems);
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({ message: 'Error fetching cart items' });
+  }
+};
+
+// Remove product from cart
+const removeFromCart = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const cart = await Cart.findOne({ userId: req.user.id });
+
+    if (!cart) {
+      return res.status(400).json({ message: 'Cart not found' });
+    }
+
+    cart.products = cart.products.filter(
+      (item) => item.productId.toString() !== productId
+    );
+
+    await cart.save();
+    res.status(200).json({ message: 'Product removed from cart', cart });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+module.exports = { addToCart, getCartItems, removeFromCart };

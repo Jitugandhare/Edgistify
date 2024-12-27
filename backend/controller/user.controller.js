@@ -81,8 +81,7 @@ const loginUser = async (req, res) => {
 
         // Sign the JWT token with expiration of 1 hour
         const token = jwt.sign(payload, process.env.JWT_SECRET_KEY);
-        console.log(token)
-        console.log(payload)
+        
 
         // Return response with token
         return res.json({ msg: "User successfully logged in", token });
