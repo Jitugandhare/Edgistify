@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
+import { useNavigate } from 'react-router-dom';
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const token = localStorage.getItem('authToken');
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -47,6 +49,18 @@ const Cart = () => {
     setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
   };
 
+  const handleQuantityChange = (id, change) => {
+    setCartItems((prevItems) =>
+      prevItems.map((item) =>
+        item._id === id ? { ...item, quantity: Math.max(item.quantity + change, 1) } : item
+      )
+    );
+  };
+
+  const handleOrderNow = () => {
+    navigate('/order');
+  };
+
   if (loading) {
     return <LoadingText>Loading...</LoadingText>;
   }
@@ -61,17 +75,24 @@ const Cart = () => {
       {cartItems.length === 0 ? (
         <EmptyCartMessage>Your cart is empty</EmptyCartMessage>
       ) : (
-        cartItems.map((item) => (
-          <CartItemContainer key={item._id}>
-            <ItemImage src={item.image || 'https://via.placeholder.com/100'} alt={item.productName} />
-            <ItemDetails>
-              <ItemText>{item.productName}</ItemText>
-              <QuantityText>Quantity: {item.quantity}</QuantityText>
-              <ItemPrice>Price: ${item.price}</ItemPrice>
-            </ItemDetails>
-            <RemoveButton onClick={() => handleRemoveItem(item._id)}>Remove</RemoveButton>
-          </CartItemContainer>
-        ))
+        <>
+          {cartItems.map((item) => (
+            <CartItemContainer key={item._id}>
+              <ItemImage src={item.image || 'https://via.placeholder.com/100'} alt={item.productName} />
+              <ItemDetails>
+                <ItemText>{item.productName}</ItemText>
+                <QuantityContainer>
+                  <QuantityButton onClick={() => handleQuantityChange(item._id, -1)}>-</QuantityButton>
+                  <QuantityText>{item.quantity}</QuantityText>
+                  <QuantityButton onClick={() => handleQuantityChange(item._id, 1)}>+</QuantityButton>
+                </QuantityContainer>
+                <ItemPrice>Price: ${item.price * item.quantity}</ItemPrice>
+              </ItemDetails>
+              <RemoveButton onClick={() => handleRemoveItem(item._id)}>Remove</RemoveButton>
+            </CartItemContainer>
+          ))}
+          <OrderButton onClick={handleOrderNow}>Order Now</OrderButton>
+        </>
       )}
     </CartContainer>
   );
@@ -132,7 +153,29 @@ const ItemText = styled.p`
   margin: 5px 0;
 `;
 
-const QuantityText = styled(ItemText)`
+const QuantityContainer = styled.div`
+  display: flex;
+  align-items: center;
+  margin: 10px 0;
+`;
+
+const QuantityButton = styled.button`
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  padding: 5px 10px;
+  cursor: pointer;
+  margin: 0 5px;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+const QuantityText = styled.span`
+  font-size: 16px;
   font-weight: bold;
 `;
 
@@ -153,6 +196,23 @@ const RemoveButton = styled.button`
 
   &:hover {
     background-color: #ff1a1a;
+  }
+`;
+
+const OrderButton = styled.button`
+  background-color: #28a745;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  display: block;
+  margin: 20px auto;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #218838;
   }
 `;
 
