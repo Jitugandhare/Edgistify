@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom';  
+import { useNavigate } from 'react-router-dom';
 
 const Login = () => {
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({ email: '', password: '' });
-  const navigate = useNavigate();  
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -15,7 +15,7 @@ const Login = () => {
   const validateForm = () => {
     const newErrors = { email: '', password: '' };
 
-   
+
     const emailPattern = /^[a-zA-Z0-9._%+-]+@(gmail\.com|yahoo\.com)$/;
     if (!formData.email) {
       newErrors.email = 'Email is required';
@@ -23,25 +23,32 @@ const Login = () => {
       newErrors.email = 'Email must be from gmail.com or yahoo.com';
     }
 
-   
+
     if (!formData.password) {
       newErrors.password = 'Password is required';
     }
 
     setErrors(newErrors);
-    return !newErrors.email && !newErrors.password; 
+    return !newErrors.email && !newErrors.password;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validateForm()) {
-      return; 
+      return;
     }
 
     try {
       const res = await axios.post('http://localhost:8000/auth/login', formData);
+      const token = res.data.token;
+      // console.log(res,'login token')
+      const userId=res.data.user._id;
+      // console.log(userId)
+      localStorage.setItem("userId",userId)
+      // Store the token in localStorage
+      localStorage.setItem('authToken', token);
       alert('Login Successful');
-      navigate('/home');  
+      navigate('/home');
     } catch (err) {
       console.error(err);
       alert('Login Failed');

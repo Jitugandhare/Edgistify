@@ -1,14 +1,18 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
-import { useNavigate } from 'react-router-dom'; 
+import { useNavigate } from 'react-router-dom';
 
 
 const ProductList = () => {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  const userId = localStorage.getItem("userId")
+  const token = localStorage.getItem("authToken")
+
+
   useEffect(() => {
     axios
       .get('http://localhost:8000/product')
@@ -23,13 +27,37 @@ const ProductList = () => {
   }, []);
 
   const addToCart = (product) => {
-    
-    const cart = JSON.parse(localStorage.getItem('cart')) || [];
-    cart.push(product);
-    localStorage.setItem('cart', JSON.stringify(cart));
 
-    
-    navigate('/cart'); 
+    // const cart = JSON.parse(localStorage.getItem('cart')) || [];
+    // cart.push(product);
+    // localStorage.setItem('cart', JSON.stringify(cart));
+    const dataSend = {
+      userId: userId,
+      products: [
+        {
+          productId: product._id,
+          quantity: 1
+        }
+      ]
+    }
+
+    axios.post("http://localhost:8000/cart/add",
+      dataSend,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    ).then((res) => {
+      console.log(res.data)
+      if (res.data.message === 'Product added to cart') {
+        navigate("/cart")
+      }
+
+    }).catch((err) => console.log(err))
+
+    console.log(dataSend, "products")
+    // navigate('/cart'); 
   };
 
   if (loading) {
@@ -47,7 +75,7 @@ const ProductList = () => {
         {products.map((product) => (
           <ProductCard key={product._id}>
             <ProductImage
-              src={product.image || '/default-image.jpg'} 
+              src={product.image || '/default-image.jpg'}
               alt={product.name}
             />
             <ProductTitle>{product.name}</ProductTitle>

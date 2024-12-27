@@ -6,11 +6,11 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
+  const token=localStorage.getItem("authToken")
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        const token = localStorage.getItem('token');
+        // const token = localStorage.getItem('token');
         console.log("Token found:", token); 
         if (!token) {
           setError('User not authenticated');
@@ -21,10 +21,10 @@ const Cart = () => {
         const res = await axios.get('http://localhost:8000/cart', {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+        console.log(res.data[0].products,"getCart")
         if (res.status === 200) {
           
-          setCartItems(res.data);
+          setCartItems(res.data[0].products);
         } else {
           setError('No cart data available');
         }
