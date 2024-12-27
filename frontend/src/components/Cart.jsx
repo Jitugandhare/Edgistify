@@ -6,12 +6,12 @@ const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const token=localStorage.getItem("authToken")
+  const token = localStorage.getItem('authToken');
+
   useEffect(() => {
     const fetchCartItems = async () => {
       try {
-        // const token = localStorage.getItem('token');
-        console.log("Token found:", token); 
+        console.log('Token found:', token);
         if (!token) {
           setError('User not authenticated');
           setLoading(false);
@@ -21,16 +21,15 @@ const Cart = () => {
         const res = await axios.get('http://localhost:8000/cart', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(res.data[0].products,"getCart")
+        console.log(res.data[0].products, 'getCart');
         if (res.status === 200) {
-          
           setCartItems(res.data[0].products);
         } else {
           setError('No cart data available');
         }
         setLoading(false);
       } catch (err) {
-        console.log("Error fetching cart items:", err); 
+        console.log('Error fetching cart items:', err);
         if (err.response?.status === 400) {
           setError('Authentication failed: Invalid or expired token');
         } else {
@@ -43,6 +42,10 @@ const Cart = () => {
     fetchCartItems();
   }, []);
 
+  const handleRemoveItem = (id) => {
+    console.log('Remove item with id:', id);
+    setCartItems((prevItems) => prevItems.filter((item) => item._id !== id));
+  };
 
   if (loading) {
     return <LoadingText>Loading...</LoadingText>;
@@ -60,9 +63,13 @@ const Cart = () => {
       ) : (
         cartItems.map((item) => (
           <CartItemContainer key={item._id}>
-            <ItemText>{item.productName}</ItemText>
-            <QuantityText>Quantity: {item.quantity}</QuantityText>
-            <ItemPrice>Price: ${item.price}</ItemPrice>
+            <ItemImage src={item.image || 'https://via.placeholder.com/100'} alt={item.productName} />
+            <ItemDetails>
+              <ItemText>{item.productName}</ItemText>
+              <QuantityText>Quantity: {item.quantity}</QuantityText>
+              <ItemPrice>Price: ${item.price}</ItemPrice>
+            </ItemDetails>
+            <RemoveButton onClick={() => handleRemoveItem(item._id)}>Remove</RemoveButton>
           </CartItemContainer>
         ))
       )}
@@ -71,7 +78,6 @@ const Cart = () => {
 };
 
 export default Cart;
-
 
 const CartContainer = styled.div`
   padding: 20px;
@@ -90,11 +96,34 @@ const CartTitle = styled.h2`
 `;
 
 const CartItemContainer = styled.div`
+  display: flex;
+  align-items: center;
   background-color: #fff;
   padding: 15px;
   border-radius: 8px;
-  margin-bottom: 10px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+
+  &:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+`;
+
+const ItemImage = styled.img`
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  border-radius: 8px;
+  margin-right: 15px;
+`;
+
+const ItemDetails = styled.div`
+  flex: 1;
+  display: flex;
+  flex-direction: column;
 `;
 
 const ItemText = styled.p`
@@ -110,6 +139,21 @@ const QuantityText = styled(ItemText)`
 const ItemPrice = styled(ItemText)`
   color: #333;
   font-weight: bold;
+`;
+
+const RemoveButton = styled.button`
+  background-color: #ff4d4d;
+  color: white;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+
+  &:hover {
+    background-color: #ff1a1a;
+  }
 `;
 
 const EmptyCartMessage = styled.p`
