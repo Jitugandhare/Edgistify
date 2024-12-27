@@ -21,7 +21,7 @@ const Cart = () => {
         const res = await axios.get('http://localhost:8000/cart', {
           headers: { Authorization: `Bearer ${token}` },
         });
-
+        console.log(res.data)
         setCartItems(res.data);
         setLoading(false);
       } catch (err) {
