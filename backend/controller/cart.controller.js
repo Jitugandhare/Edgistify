@@ -1,26 +1,35 @@
 const express = require("express");
 const Cart = require("../models/cart.model.js");
 const Product = require("../models/product.model.js");
-const authMiddleware = require("../middleware/auth.middleware.js");
 
 
 
-
-
-const getCartItems= async (req, res) => {
+const getCartItems = async (req, res) => {
   const userId = req.user.id;
-  const cart = await Cart.findOne({ userId }).populate("products.productId");
- 
-  if (!cart) {
-    return res.status(404).json({ msg: "Cart not found" });
-  }
 
-  res.json(cart);
+  try {
+    const cart = await Cart.findOne({ userId }).populate("products.productId");
+
+    if (!cart) {
+      return res.status(404).json({ msg: "Cart not found" });
+    }
+
+    const cartData = cart.products.map(item => ({
+      productName: item.productId.name,
+      price: item.productId.price,
+      quantity: item.quantity,
+      _id: item.productId._id,
+    }));
+
+    res.json(cartData);
+  } catch (error) {
+    res.status(500).json({ msg: "Server error", error: error.message });
+  }
 };
 
 
 
-const addToCart= async (req, res) => {
+const addToCart = async (req, res) => {
   const { productId, quantity } = req.body;
   const userId = req.user.id;
 
@@ -55,4 +64,4 @@ const addToCart= async (req, res) => {
   res.json({ msg: "Product added to cart", cart });
 };
 
-module.exports = {getCartItems,addToCart};
+module.exports = { getCartItems, addToCart };

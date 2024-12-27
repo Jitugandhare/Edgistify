@@ -18,14 +18,24 @@ const Cart = () => {
           return;
         }
 
+        
         const res = await axios.get('http://localhost:8000/cart', {
           headers: { Authorization: `Bearer ${token}` },
         });
-        console.log(res.data)
-        setCartItems(res.data);
+
+        if (res.status === 200) {
+          setCartItems(res.data);  
+        } else {
+          setError('No cart data available');
+        }
+
         setLoading(false);
       } catch (err) {
-        setError('Error fetching cart items');
+        if (err.response?.status === 401) {
+          setError('Authentication failed: Invalid or expired token');
+        } else {
+          setError('Error fetching cart items');
+        }
         setLoading(false);
         console.error(err);
       }
@@ -61,6 +71,7 @@ const Cart = () => {
 };
 
 export default Cart;
+
 
 const CartContainer = styled.div`
   padding: 20px;

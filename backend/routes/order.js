@@ -26,9 +26,20 @@ router.post("/place", authMiddleware, async (req, res) => {
 
   for (let item of cart.products) {
     const product = await Product.findById(item.productId);
+    if (!product) {
+      return res.status(400).json({ msg: `Product not found for ID ${item.productId}` });
+    }
+
+    
+    if (product.price == null || isNaN(product.price)) {
+      return res.status(400).json({ msg: `Product ${product.name} does not have a valid price` });
+    }
+
+    
     if (product.stock < item.quantity) {
       return res.status(400).json({ msg: `Not enough stock for ${product.name}` });
     }
+
     totalPrice += product.price * item.quantity;
     orderProducts.push({
       productId: item.productId,
