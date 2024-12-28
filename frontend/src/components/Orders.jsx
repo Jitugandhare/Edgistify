@@ -10,87 +10,94 @@ const Orders = () => {
   const [paymentStatus, setPaymentStatus] = useState('Pending');
   const [orderStatus, setOrderStatus] = useState('Pending');
   const [totalPrice, setTotalPrice] = useState(0);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const token = localStorage.getItem('authToken');
 
+  
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/orders', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+        const res = await axios.get('http://localhost:8000/order', {
+          headers: { Authorization: `Bearer ${token}` },
         });
         setOrders(res.data);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching orders: ", err);
       }
     };
     fetchOrders();
-  }, []);
+  }, [token]);
 
   useEffect(() => {
     const fetchCart = async () => {
       try {
         const res = await axios.get('http://localhost:8000/cart', {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+          headers: { Authorization: `Bearer ${token}` },
         });
-        setCart(res.data);
-        calculateTotalPrice(res.data);
+        setCart(res.data[0].products);
+        calculateTotalPrice(res.data[0].products);
       } catch (err) {
-        console.error(err);
+        console.error("Error fetching cart: ", err);
       }
     };
     fetchCart();
-  }, []);
+  }, [token]);
+
 
   const calculateTotalPrice = (cart) => {
     const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     setTotalPrice(total);
   };
 
+  
   const placeOrder = async () => {
-    // Validate stock availability
-    const outOfStockItems = [];
-    for (const item of cart) {
-      const res = await axios.get(`http://localhost:8000/products/${item.productId}`);
-      if (res.data.stock < item.quantity) {
-        outOfStockItems.push(item.productId);
-      }
-    }
-
-    if (outOfStockItems.length > 0) {
-      alert('Some items are out of stock!');
+    if (cart.length === 0) {
+      setError('Your cart is empty! Cannot place an order.');
       return;
     }
 
     
+    const validProducts = cart.map((item) => ({
+      productId: item._id, 
+      quantity: item.quantity,
+      price: item.price,
+    }));
+
+    if (validProducts.some((item) => !item.productId)) {
+      setError('Some products are missing productId');
+      return;
+    }
+
+    const orderData = {
+      userId: localStorage.getItem('userId'),
+      products: validProducts,
+      totalPrice,
+      shippingAddress,
+      paymentStatus,
+      orderStatus,
+    };
+
     try {
-      const userId = localStorage.getItem('userId');
-      const orderData = {
-        userId,
-        products: cart.map(item => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          price: item.price,
-        })),
-        totalPrice,
-        shippingAddress,
-        paymentStatus,
-        orderStatus,
-      };
-
-      const res = await axios.post('http://localhost:8000/orders', orderData, {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      const res = await axios.post('http://localhost:8000/order/place', orderData, {
+        headers: { Authorization: `Bearer ${token}` },
       });
 
-      
-      await axios.delete('http://localhost:8000/cart', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-
-      alert('Order placed successfully!');
-      navigate('/orders'); 
+      if (res.status === 200) {
+        
+        await Promise.all(cart.map((item) =>
+          axios.delete(`http://localhost:8000/cart/remove/${item._id}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          })
+        ));
+        alert('Order placed successfully!');
+        navigate('/orders');
+      } else {
+        setError('Failed to place order');
+      }
     } catch (err) {
-      console.error(err);
-      alert('Failed to place order!');
+      console.error("Error placing order: ", err);
+      setError('Failed to place order');
     }
   };
 
@@ -105,13 +112,16 @@ const Orders = () => {
           onChange={(e) => setShippingAddress(e.target.value)}
           required
         />
+        {error && <ErrorText>{error}</ErrorText>}
         <Button onClick={placeOrder}>Place Order</Button>
       </OrderForm>
       {orders.map((order) => (
         <OrderItem key={order._id}>
           <OrderText>Total Price: ${order.totalPrice}</OrderText>
           <OrderText>Shipping Address: {order.shippingAddress}</OrderText>
-          <OrderStatus status={order.orderStatus}>Status: {order.orderStatus}</OrderStatus>
+          <OrderStatus status={order.orderStatus}>
+            Status: {order.orderStatus}
+          </OrderStatus>
         </OrderItem>
       ))}
     </OrdersContainer>
@@ -146,7 +156,7 @@ const OrderItem = styled.div`
   margin-bottom: 20px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
   transition: transform 0.2s ease-in-out;
-  
+
   &:hover {
     transform: translateY(-5px);
     box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
@@ -164,8 +174,8 @@ const OrderStatus = styled.p`
   font-weight: bold;
   color: ${({ status }) =>
     status === 'Delivered' ? '#27ae60' :
-    status === 'Pending' ? '#f39c12' :
-    '#e74c3c'};
+      status === 'Pending' ? '#f39c12' :
+        '#e74c3c'};
   font-size: 16px;
   margin-top: 10px;
 `;
@@ -195,7 +205,7 @@ const Input = styled.input`
   color: #333;
   background-color: #fafafa;
   transition: border-color 0.3s ease-in-out;
-  
+
   &:focus {
     border-color: #3498db;
     outline: none;
@@ -212,9 +222,15 @@ const Button = styled.button`
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.3s ease-in-out;
-  
+
   &:hover {
     background-color: #2980b9;
   }
+`;
+
+const ErrorText = styled.p`
+  color: red;
+  font-size: 16px;
+  text-align: center;
 `;
 
