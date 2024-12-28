@@ -39,7 +39,7 @@ const Login = () => {
     }
 
     try {
-      const res = await axios.post('http://localhost:8000/auth/login', formData);
+      const res = await axios.post('https://backend-g6ct.onrender.com/auth/login', formData);
       const token = res.data.token;
       // console.log(res,'login token')
       const userId=res.data.user._id;

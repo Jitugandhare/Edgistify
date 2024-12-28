@@ -48,7 +48,7 @@ const Register = () => {
     }
 
     try {
-      const res = await axios.post('http://localhost:8000/auth/register', formData);
+      const res = await axios.post('https://backend-g6ct.onrender.com/auth/register', formData);
       setSuccess('Registration successful!');
       setFormData({ fullName: '', email: '', password: '' });
       setTimeout(() => {

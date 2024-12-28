@@ -20,7 +20,7 @@ const Cart = () => {
           return;
         }
 
-        const res = await axios.get('http://localhost:8000/cart', {
+        const res = await axios.get('https://backend-g6ct.onrender.com/cart', {
           headers: { Authorization: `Bearer ${token}` },
         });
         // console.log(res.data[0].products, 'getCart');

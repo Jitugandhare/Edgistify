@@ -18,7 +18,7 @@ const Orders = () => {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/order', {
+        const res = await axios.get('https://backend-g6ct.onrender.com/order', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setOrders(res.data);
@@ -32,7 +32,7 @@ const Orders = () => {
   useEffect(() => {
     const fetchCart = async () => {
       try {
-        const res = await axios.get('http://localhost:8000/cart', {
+        const res = await axios.get('https://backend-g6ct.onrender.com/cart', {
           headers: { Authorization: `Bearer ${token}` },
         });
         setCart(res.data[0].products);
@@ -79,14 +79,14 @@ const Orders = () => {
     };
 
     try {
-      const res = await axios.post('http://localhost:8000/order/place', orderData, {
+      const res = await axios.post('https://backend-g6ct.onrender.com/order/place', orderData, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       if (res.status === 200) {
         
         await Promise.all(cart.map((item) =>
-          axios.delete(`http://localhost:8000/cart/remove/${item._id}`, {
+          axios.delete(`https://backend-g6ct.onrender.com/cart/remove/${item._id}`, {
             headers: { Authorization: `Bearer ${token}` },
           })
         ));
