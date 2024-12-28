@@ -14,7 +14,7 @@ const Orders = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem('authToken');
 
-  
+  // fetch data
   useEffect(() => {
     const fetchOrders = async () => {
       try {
