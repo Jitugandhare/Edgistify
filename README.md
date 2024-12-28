@@ -93,6 +93,8 @@ MONGO_URI=<your-mongo-uri>
 JWT_SECRET=<your-jwt-secret>
 PORT=8000
 
+### Postman workshop: 
+https://app.getpostman.com/join-team?invite_code=bd8f067c1e33da1d1e38a88820fbb21fbf3981fbcf90b570cb65c2330470ce52&target_code=cb4e9fb9f708fd88a08715b270fb2352
 
 Backend API Routes
 Here are the key routes exposed by the backend:
