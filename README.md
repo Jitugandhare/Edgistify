@@ -18,6 +18,8 @@ This repository contains the implementation of an e-commerce platform with user 
 ---
 ### deployment links: 
 [Frontend] https://frontend-5z52vxbkk-jitu-gandhares-projects.vercel.app/
+
+[backend] https://backend-g6ct.onrender.com
 ## System Overview
 
 This e-commerce platform allows users to:
